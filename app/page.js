@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const API = "tohttps://backend.goswamimohit787916.workers.dev/";
+const API = "https://backend.goswamimohit787916.workers.dev";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -10,7 +10,7 @@ export default function Home() {
   const [credits, setCredits] = useState(0);
   const [status, setStatus] = useState("");
 
-  // SIGNUP
+  // ================= SIGNUP =================
   async function signup() {
     setStatus("Creating...");
 
@@ -34,7 +34,7 @@ export default function Home() {
     }
   }
 
-  // LOGIN
+  // ================= LOGIN =================
   async function login() {
     setStatus("Logging in...");
 
@@ -42,17 +42,17 @@ export default function Home() {
       const res = await fetch(API + "/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include"
+        body: JSON.stringify({ email, password })
       });
 
       const data = await res.json();
 
       if (data.ok) {
+        localStorage.setItem("uid", data.uid);
         setStatus("Logged in");
         loadUser();
       } else {
-        setStatus("Invalid credentials");
+        setStatus("Invalid login");
       }
 
     } catch (e) {
@@ -60,13 +60,12 @@ export default function Home() {
     }
   }
 
-  // LOAD USER
+  // ================= LOAD USER =================
   async function loadUser() {
-    try {
-      const res = await fetch(API + "/user", {
-        credentials: "include"
-      });
+    const uid = localStorage.getItem("uid");
 
+    try {
+      const res = await fetch(API + "/user?uid=" + uid);
       const data = await res.json();
 
       if (data.user) {
@@ -74,7 +73,7 @@ export default function Home() {
       }
 
     } catch (e) {
-      console.log("User fetch failed");
+      console.log("Failed to load user");
     }
   }
 
