@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const API = "https://moraai.pages.dev/";
+const API = "tohttps://backend.goswamimohit787916.workers.dev/";
 
 export default function Home() {
   const [email, setEmail] = useState("");
