@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Clone - Generate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        .tail-container { font-family: 'Inter', sans-serif; }
+        .waveform-bar { transition: height 0.15s ease; }
+        .active { background-color: #f0f9ff; color: #1e40af; }
+    </style>
+</head>
+<body class="tail-container bg-zinc-100 min-h-screen">
+<div class="flex h-screen">
+    <!-- SIDEBAR -->
+    <div class="w-72 bg-white border-r flex flex-col">
+        <div class="px-6 py-8 flex items-center gap-3 border-b">
+            <div class="w-9 h-9 bg-blue-600 rounded-2xl flex items-center justify-center text-white">
+                <i class="fa-solid fa-plus"></i>
+            </div>
+            <span class="text-2xl font-semibold">Generate</span>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1">
+            <a href="#" class="sidebar-link active flex items-center gap-3 px-5 py-3.5 rounded-3xl"><i class="fa-solid fa-microphone"></i> Generate</a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3.5 rounded-3xl"><i class="fa-solid fa-headphones"></i> Voices</a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3.5 rounded-3xl"><i class="fa-solid fa-folder-tree"></i> Projects</a>
+            <a href="#" class="sidebar-link flex items-center gap-3 px-5 py-3.5 rounded-3xl"><i class="fa-solid fa-gear"></i> Settings</a>
+        </nav>
+        <div class="p-6 border-t">
+            <div class="flex items-center gap-3">
+                <img src="https://i.pravatar.cc/128?img=68" class="w-9 h-9 rounded-2xl">
+                <div>
+                    <div class="font-semibold text-sm">John Doe</div>
+                    <div class="text-xs text-zinc-500">john@example.com</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="flex-1 flex flex-col">
+        <!-- TOP BAR -->
+        <div class="h-14 border-b bg-white px-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="font-medium">Credit Limit:</span>
+                <span id="credit-display" class="font-mono text-blue-600">138 / 15,000</span>
+            </div>
+            <button onclick="upgrade()" class="bg-blue-600 text-white px-6 h-9 rounded-3xl font-semibold">Upgrade</button>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="flex-1 p-8 overflow-auto bg-zinc-50">
+            <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow border">
+                <!-- TABS -->
+                <div class="flex border-b">
+                    <button onclick="switchTab(0)" class="tab flex-1 py-5 border-b-2 border-blue-600 text-blue-600 font-medium">Text</button>
+                    <button onclick="switchTab(1)" class="tab flex-1 py-5 text-zinc-400">File Upload</button>
+                </div>
+
+                <div class="p-8">
+                    <textarea id="text" class="w-full h-64 bg-zinc-50 border rounded-2xl p-6 focus:outline-none" placeholder="Enter your text here or paste your script..."></textarea>
+                    <div class="text-right text-xs mt-2 text-zinc-400"><span id="chars">0</span>/2,500</div>
+                </div>
+
+                <div class="px-8 pb-8 flex gap-4">
+                    <button onclick="uploadTXT()" class="flex-1 border h-12 rounded-2xl font-medium flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Upload TXT
+                    </button>
+                    <button onclick="cloneModal()" class="flex-1 bg-blue-600 text-white h-12 rounded-2xl font-medium flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-microphone"></i> Clone Voice
+                    </button>
+                </div>
+
+                <!-- OPTIONS -->
+                <div class="border-t px-8 py-6 grid grid-cols-4 gap-4 bg-zinc-50">
+                    <select id="voice" class="h-11 border rounded-2xl px-4"><option>Default Voice</option></select>
+                    <select id="lang" class="h-11 border rounded-2xl px-4"><option>English</option></select>
+                    <select id="style" class="h-11 border rounded-2xl px-4"><option>Standard</option></select>
+                    <button onclick="generate()" id="gen-btn" class="bg-blue-600 text-white rounded-2xl font-semibold">Generate</button>
+                </div>
+
+                <!-- AUDIO PLAYER -->
+                <div id="player" class="hidden border-t p-8">
+                    <div class="flex items-center gap-6">
+                        <button onclick="togglePlay()" class="w-12 h-12 bg-blue-600 rounded-2xl text-white flex items-center justify-center">
+                            <i id="play-icon" class="fa-solid fa-play"></i>
+                        </button>
+                        <div id="wave" class="flex-1 flex gap-1 items-end h-12"></div>
+                        <div id="time" class="font-mono text-xs w-20 text-right">00:00 / 00:15</div>
+                        <button onclick="download()" class="text-zinc-400"><i class="fa-solid fa-download"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CLONE MODAL -->
+<div id="clone-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center">
+    <div class="bg-white rounded-3xl w-full max-w-md p-8">
+        <h3 class="font-semibold text-xl mb-6">Clone Voice</h3>
+        <div onclick="document.getElementById('voicefile').click()" class="border-2 border-dashed rounded-2xl h-48 flex flex-col items-center justify-center cursor-pointer">
+            <i class="fa-solid fa-cloud-arrow-up text-5xl text-zinc-300 mb-3"></i>
+            <p class="text-zinc-500">Drop audio file (max 30s)</p>
+            <input type="file" id="voicefile" accept="audio/*" class="hidden" onchange="cloneVoice()">
+        </div>
+        <div class="mt-8 flex gap-4">
+            <button onclick="closeClone()" class="flex-1 py-4 border rounded-2xl">Cancel</button>
+            <button onclick="closeClone()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl">Start Cloning</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const BACKEND = "https://backend.goswamimohit787916.workers.dev";
+let audio = null;
+let isPlaying = false;
+
+async function loadCredits() {
+    const res = await fetch(`${BACKEND}/credits?email=john@example.com`);
+    const data = await res.json();
+    document.getElementById('credit-display').textContent = `${data.used} / 15,000`;
+}
+
+async function generate() {
+    const btn = document.getElementById('gen-btn');
+    btn.innerHTML = 'Generating...';
+    btn.disabled = true;
+
+    const text = document.getElementById('text').value;
+
+    const res = await fetch(`${BACKEND}/generate`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            email: "john@example.com",
+            text: text,
+            voice: document.getElementById('voice').value,
+            language: document.getElementById('lang').value,
+            style: document.getElementById('style').value
+        })
+    });
+
+    const data = await res.json();
+    
+    // Show player with returned audio URL
+    document.getElementById('player').classList.remove('hidden');
+    audio = new Audio(data.audioUrl);
+    createWaveform();
+    btn.innerHTML = 'Generate';
+    btn.disabled = false;
+}
+
+function createWaveform() {
+    const w = document.getElementById('wave');
+    w.innerHTML = '';
+    for(let i=0; i<48; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'waveform-bar bg-blue-600 w-1 rounded-full';
+        bar.style.height = (30 + Math.random()*70) + '%';
+        w.appendChild(bar);
+    }
+}
+
+function togglePlay() {
+    if(!audio) return;
+    if(isPlaying) {
+        audio.pause();
+        document.getElementById('play-icon').classList.replace('fa-pause','fa-play');
+    } else {
+        audio.play();
+        document.getElementById('play-icon').classList.replace('fa-play','fa-pause');
+    }
+    isPlaying = !isPlaying;
+}
+
+async function cloneVoice() {
+    const file = document.getElementById('voicefile').files[0];
+    if(!file) return;
+    
+    const form = new FormData();
+    form.append('email', 'john@example.com');
+    form.append('audio', file);
+
+    await fetch(`${BACKEND}/clone-voice`, { method: 'POST', body: form });
+    alert('✅ Voice cloned and .pth saved to your D1 + bound to john@example.com');
+    closeClone();
+}
+
+function uploadTXT() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.txt';
+    input.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            document.getElementById('text').value = ev.target.result;
+            document.getElementById('chars').textContent = ev.target.result.length;
+        };
+        reader.readAsText(e.target.files[0]);
+    };
+    input.click();
+}
+
+function cloneModal() { document.getElementById('clone-modal').classList.remove('hidden'); }
+function closeClone() { document.getElementById('clone-modal').classList.add('hidden'); }
+function upgrade() { alert('Upgrade modal coming soon (payment later)'); }
+function download() { if(audio) window.open(audio.src); }
+function switchTab(n) { alert('File Upload tab coming soon'); }
+
+// Live char count
+document.getElementById('text').addEventListener('input', () => {
+    document.getElementById('chars').textContent = document.getElementById('text').value.length;
+});
+
+// Init
+window.onload = () => {
+    loadCredits();
+    document.getElementById('text').value = "Hello, this is my first cloned voice using Cloudflare + D1!";
+};
+</script>
+</body>
+</html>
