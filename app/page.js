@@ -1,214 +1,85 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-const API = "https://backend.goswamimohit787916.workers.dev";
+import { useState } from "react";
+import Sidebar from "../components/Sidebar";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [credits, setCredits] = useState(0);
-  const [status, setStatus] = useState("");
-  const [voices, setVoices] = useState([]);
-
-  // ================= SIGNUP =================
-  async function signup() {
-    console.log("Sending:", email, password);
-
-    if (!email || !password) {
-      setStatus("Enter email & password");
-      return;
-    }
-
-    setStatus("Creating...");
-
-    try {
-      const res = await fetch(API + "/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: String(email),
-          password: String(password)
-        })
-      });
-
-      const data = await res.json();
-      console.log("Signup response:", data);
-
-      if (data.ok) {
-        setStatus("Account created");
-      } else {
-        setStatus(data.error || "Signup error");
-      }
-
-    } catch (e) {
-      console.log(e);
-      setStatus("Network error");
-    }
-  }
-
-  // ================= LOGIN =================
-  async function login() {
-    console.log("Login:", email, password);
-
-    if (!email || !password) {
-      setStatus("Enter email & password");
-      return;
-    }
-
-    setStatus("Logging in...");
-
-    try {
-      const res = await fetch(API + "/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: String(email),
-          password: String(password)
-        })
-      });
-
-      const data = await res.json();
-      console.log("Login response:", data);
-
-      if (data.ok) {
-        localStorage.setItem("uid", data.uid);
-        setStatus("Logged in");
-        loadUser();
-        loadVoices();
-      } else {
-        setStatus("Invalid login");
-      }
-
-    } catch (e) {
-      console.log(e);
-      setStatus("Network error");
-    }
-  }
-
-  // ================= LOAD USER =================
-  async function loadUser() {
-    const uid = localStorage.getItem("uid");
-
-    if (!uid) return;
-
-    try {
-      const res = await fetch(API + "/user?uid=" + uid);
-      const data = await res.json();
-
-      setCredits(data.user?.credits || 0);
-
-    } catch (e) {
-      console.log("User load failed");
-    }
-  }
-
-  // ================= LOAD VOICES =================
-  async function loadVoices() {
-    const uid = localStorage.getItem("uid");
-
-    if (!uid) return;
-
-    try {
-      const res = await fetch(API + "/voices?uid=" + uid);
-      const data = await res.json();
-
-      setVoices(data.voices || []);
-
-    } catch (e) {
-      console.log("Voice load failed");
-    }
-  }
-
-  // ================= UPLOAD VOICE =================
-  function uploadVoice(e) {
-    const file = e.target.files[0];
-    const uid = localStorage.getItem("uid");
-
-    if (!file || !uid) return;
-
-    const reader = new FileReader();
-
-    reader.onload = async () => {
-      const base64 = reader.result.split(",")[1];
-
-      await fetch(API + "/save-voice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          uid,
-          name: file.name,
-          pth: base64
-        })
-      });
-
-      alert("Voice uploaded");
-      loadVoices();
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  // ================= AUTO LOAD =================
-  useEffect(() => {
-    const uid = localStorage.getItem("uid");
-    if (uid) {
-      loadUser();
-      loadVoices();
-    }
-  }, []);
+  const [text, setText] = useState("");
 
   return (
-    <div style={{ padding: 30, fontFamily: "Arial" }}>
-      <h1>MoraAI</h1>
+    <div style={{ display: "flex" }}>
 
-      {/* EMAIL */}
-      <input
-        value={email}
-        onChange={(e) => {
-          console.log("Email:", e.target.value);
-          setEmail(e.target.value);
-        }}
-        placeholder="Email"
-      />
-      <br /><br />
+      <Sidebar />
 
-      {/* PASSWORD */}
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => {
-          console.log("Password:", e.target.value);
-          setPassword(e.target.value);
-        }}
-        placeholder="Password"
-      />
-      <br /><br />
+      <div style={{ flex: 1, padding: "20px" }}>
 
-      {/* BUTTONS */}
-      <button onClick={signup}>Sign Up</button>
-      <button onClick={login}>Login</button>
+        {/* TOP BAR */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: "20px"
+        }}>
+          <div>Credit Limit: 138 / 15000</div>
+          <button>Upgrade</button>
+        </div>
 
-      <p>{status}</p>
-      <p>Credits: {credits}</p>
+        {/* MAIN BOX */}
+        <div style={{
+          background: "#fff",
+          padding: "20px",
+          borderRadius: "10px"
+        }}>
 
-      <hr />
+          {/* TABS */}
+          <div style={{ marginBottom: "10px" }}>
+            <b>Text</b> | File Upload
+          </div>
 
-      <h3>Upload Voice (.pth)</h3>
-      <input type="file" onChange={uploadVoice} />
+          {/* TEXT AREA */}
+          <textarea
+            placeholder="Enter your text..."
+            style={{
+              width: "100%",
+              height: "120px",
+              padding: "10px"
+            }}
+            onChange={(e) => setText(e.target.value)}
+          />
 
-      <h3>Your Voices</h3>
-      <ul>
-        {voices.map(v => (
-          <li key={v.id}>{v.name}</li>
-        ))}
-      </ul>
+          {/* BUTTONS */}
+          <div style={{ marginTop: "10px" }}>
+            <button>Upload TXT</button>
+            <button style={{ marginLeft: "10px" }}>
+              Clone Voice
+            </button>
+          </div>
+
+          {/* CONTROLS */}
+          <div style={{ marginTop: "15px" }}>
+            <select><option>Default Voice</option></select>
+            <select style={{ marginLeft: "10px" }}>
+              <option>English</option>
+            </select>
+            <select style={{ marginLeft: "10px" }}>
+              <option>Standard</option>
+            </select>
+
+            <button style={{ marginLeft: "10px" }}>
+              Generate
+            </button>
+          </div>
+
+          {/* AUDIO */}
+          <div style={{
+            marginTop: "20px",
+            padding: "10px",
+            border: "1px solid #ddd"
+          }}>
+            ▶ Audio will appear here
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }
