@@ -11,68 +11,125 @@ export default function Home() {
   const [status, setStatus] = useState("");
   const [voices, setVoices] = useState([]);
 
-  // ========= SIGNUP =========
+  // ================= SIGNUP =================
   async function signup() {
+    console.log("Sending:", email, password);
+
+    if (!email || !password) {
+      setStatus("Enter email & password");
+      return;
+    }
+
     setStatus("Creating...");
 
-    const res = await fetch(API + "/signup", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const res = await fetch(API + "/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: String(email),
+          password: String(password)
+        })
+      });
 
-    const data = await res.json();
+      const data = await res.json();
+      console.log("Signup response:", data);
 
-    if (data.ok) setStatus("Account created");
-    else setStatus("Error");
-  }
+      if (data.ok) {
+        setStatus("Account created");
+      } else {
+        setStatus(data.error || "Signup error");
+      }
 
-  // ========= LOGIN =========
-  async function login() {
-    setStatus("Logging in...");
-
-    const res = await fetch(API + "/login", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-
-    if (data.ok) {
-      localStorage.setItem("uid", data.uid);
-      setStatus("Logged in");
-      loadUser();
-      loadVoices();
-    } else {
-      setStatus("Invalid login");
+    } catch (e) {
+      console.log(e);
+      setStatus("Network error");
     }
   }
 
-  // ========= LOAD USER =========
+  // ================= LOGIN =================
+  async function login() {
+    console.log("Login:", email, password);
+
+    if (!email || !password) {
+      setStatus("Enter email & password");
+      return;
+    }
+
+    setStatus("Logging in...");
+
+    try {
+      const res = await fetch(API + "/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: String(email),
+          password: String(password)
+        })
+      });
+
+      const data = await res.json();
+      console.log("Login response:", data);
+
+      if (data.ok) {
+        localStorage.setItem("uid", data.uid);
+        setStatus("Logged in");
+        loadUser();
+        loadVoices();
+      } else {
+        setStatus("Invalid login");
+      }
+
+    } catch (e) {
+      console.log(e);
+      setStatus("Network error");
+    }
+  }
+
+  // ================= LOAD USER =================
   async function loadUser() {
     const uid = localStorage.getItem("uid");
 
-    const res = await fetch(API + "/user?uid=" + uid);
-    const data = await res.json();
+    if (!uid) return;
 
-    setCredits(data.user?.credits || 0);
+    try {
+      const res = await fetch(API + "/user?uid=" + uid);
+      const data = await res.json();
+
+      setCredits(data.user?.credits || 0);
+
+    } catch (e) {
+      console.log("User load failed");
+    }
   }
 
-  // ========= LOAD VOICES =========
+  // ================= LOAD VOICES =================
   async function loadVoices() {
     const uid = localStorage.getItem("uid");
 
-    const res = await fetch(API + "/voices?uid=" + uid);
-    const data = await res.json();
+    if (!uid) return;
 
-    setVoices(data.voices.results || []);
+    try {
+      const res = await fetch(API + "/voices?uid=" + uid);
+      const data = await res.json();
+
+      setVoices(data.voices || []);
+
+    } catch (e) {
+      console.log("Voice load failed");
+    }
   }
 
-  // ========= UPLOAD VOICE =========
-  async function uploadVoice(e) {
+  // ================= UPLOAD VOICE =================
+  function uploadVoice(e) {
     const file = e.target.files[0];
     const uid = localStorage.getItem("uid");
+
+    if (!file || !uid) return;
 
     const reader = new FileReader();
 
@@ -81,7 +138,9 @@ export default function Home() {
 
       await fetch(API + "/save-voice", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           uid,
           name: file.name,
@@ -96,6 +155,7 @@ export default function Home() {
     reader.readAsDataURL(file);
   }
 
+  // ================= AUTO LOAD =================
   useEffect(() => {
     const uid = localStorage.getItem("uid");
     if (uid) {
@@ -105,22 +165,40 @@ export default function Home() {
   }, []);
 
   return (
-    <div style={{ padding: 30 }}>
+    <div style={{ padding: 30, fontFamily: "Arial" }}>
       <h1>MoraAI</h1>
 
-      <input placeholder="Email" onChange={e=>setEmail(e.target.value)} />
-      <br/><br/>
+      {/* EMAIL */}
+      <input
+        value={email}
+        onChange={(e) => {
+          console.log("Email:", e.target.value);
+          setEmail(e.target.value);
+        }}
+        placeholder="Email"
+      />
+      <br /><br />
 
-      <input type="password" placeholder="Password" onChange={e=>setPassword(e.target.value)} />
-      <br/><br/>
+      {/* PASSWORD */}
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => {
+          console.log("Password:", e.target.value);
+          setPassword(e.target.value);
+        }}
+        placeholder="Password"
+      />
+      <br /><br />
 
+      {/* BUTTONS */}
       <button onClick={signup}>Sign Up</button>
       <button onClick={login}>Login</button>
 
       <p>{status}</p>
       <p>Credits: {credits}</p>
 
-      <hr/>
+      <hr />
 
       <h3>Upload Voice (.pth)</h3>
       <input type="file" onChange={uploadVoice} />
