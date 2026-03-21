@@ -1,0 +1,78 @@
+"use client";
+import { useState, useEffect } from "react";
+import Sidebar from "./components/Sidebar";
+
+const API = "https://backend.goswamimohit787916.workers.dev";
+
+export default function Home() {
+  const [text, setText] = useState("");
+  const [credits, setCredits] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [audio, setAudio] = useState(null);
+
+  const fetchUser = async () => {
+    const uid = localStorage.getItem("uid");
+    const res = await fetch(`${API}/user?uid=${uid}`);
+    const data = await res.json();
+    setCredits(data.user.credits);
+  };
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    const res = await fetch(`${API}/generate`, {
+      method: "POST",
+      body: JSON.stringify({ uid: localStorage.getItem("uid"), text })
+    });
+    const data = await res.json();
+    if(data.ok) {
+      setAudio(data.audio);
+      fetchUser();
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUser(); }, []);
+
+  return (
+    <div className="flex bg-[#f8f9fb] min-h-screen text-gray-800">
+      <Sidebar credits={credits} />
+      
+      <main className="flex-1 p-10 max-w-5xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold">Generate<span>.</span></h2>
+          <button className="bg-blue-500 text-white px-5 py-2 rounded-lg font-semibold shadow-lg shadow-blue-200">
+            Upgrade
+          </button>
+        </header>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+          <div className="flex gap-8 mb-6 border-b border-gray-50 pb-4">
+            <button className="font-bold border-b-2 border-black pb-2">Text</button>
+            <button className="text-gray-400 font-medium">File Upload</button>
+          </div>
+
+          <textarea 
+            className="w-full h-48 p-5 bg-gray-50 rounded-xl outline-none border-none focus:ring-2 ring-blue-100 transition-all text-lg"
+            placeholder="Type your script here..."
+            onChange={(e) => setText(e.target.value)}
+          />
+
+          <div className="flex justify-between items-center mt-6">
+            <div className="flex gap-3">
+              <button className="px-4 py-2 border rounded-lg text-sm font-medium hover:bg-gray-50">+ Upload TXT</button>
+              <button className="px-4 py-2 border rounded-lg text-sm font-medium hover:bg-gray-50">🎤 Clone Voice</button>
+            </div>
+            <button 
+              onClick={handleGenerate}
+              disabled={loading}
+              className="bg-black text-white px-10 py-3 rounded-xl font-bold hover:scale-105 transition-transform"
+            >
+              {loading ? "Synthesizing..." : "Generate"}
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+              }
+
