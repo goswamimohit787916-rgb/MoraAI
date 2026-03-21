@@ -1,0 +1,7 @@
+{
+  "name": "voice-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Static HTML - no build needed'"
+  }
+}
