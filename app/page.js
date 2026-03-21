@@ -17,19 +17,28 @@ export default function Home() {
     try {
       const res = await fetch(API + "/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      console.log("Signup response:", text);
+
+      const data = JSON.parse(text);
 
       if (data.ok) {
         setStatus("Account created");
       } else {
-        setStatus("Error");
+        setStatus("Signup error");
       }
 
     } catch (e) {
+      console.log(e);
       setStatus("Network error");
     }
   }
@@ -41,8 +50,13 @@ export default function Home() {
     try {
       const res = await fetch(API + "/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
       });
 
       const data = await res.json();
@@ -73,12 +87,12 @@ export default function Home() {
       }
 
     } catch (e) {
-      console.log("Failed to load user");
+      console.log("User fetch failed");
     }
   }
 
   return (
-    <div style={{ padding: 40, fontFamily: "Arial" }}>
+    <div style={{ padding: 40 }}>
       <h1>MoraAI</h1>
 
       <input
