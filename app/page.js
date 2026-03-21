@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const API = "https://mora-api.xxxxx.workers.dev";
+const API = "https://moraai.pages.dev/";
 
 export default function Home() {
   const [email,setEmail]=useState("");
