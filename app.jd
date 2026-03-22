@@ -1,0 +1,95 @@
+const API = "https://backend.goswamimohit787916.workers.dev/";
+
+let uid = localStorage.getItem("uid");
+
+if(uid){
+  showApp();
+  loadUser();
+}
+
+function showApp(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").classList.remove("hidden");
+}
+
+// SIGNUP
+async function signup(){
+  await fetch(API+"/signup",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:email.value,
+      password:password.value
+    })
+  });
+  alert("Account created");
+}
+
+// LOGIN
+async function login(){
+  let r = await fetch(API+"/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:email.value,
+      password:password.value
+    })
+  });
+
+  let d = await r.json();
+
+  if(d.ok){
+    uid = d.uid;
+    localStorage.setItem("uid",uid);
+    showApp();
+    loadUser();
+  } else alert("Invalid login");
+}
+
+// USER
+async function loadUser(){
+  let r = await fetch(API+"/user?uid="+uid);
+  let d = await r.json();
+  credits.innerText = d.user.credits;
+}
+
+// GENERATE
+async function generate(){
+
+  if(!text.value){
+    alert("Enter text");
+    return;
+  }
+
+  let r = await fetch(API+"/generate",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      uid:uid,
+      text:text.value
+    })
+  });
+
+  let d = await r.json();
+
+  if(d.ok){
+    audio.src = d.audio;
+    credits.innerText = d.remaining;
+  } else alert(d.error);
+}
+
+// PAYMENT
+function pay(){
+  alert("Pay to UPI → yourupi@upi");
+  verify();
+}
+
+async function verify(){
+  await fetch(API+"/verify-payment",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({uid})
+  });
+
+  loadUser();
+}
