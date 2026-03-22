@@ -1,211 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice AI - ElevenLabs Style</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: white; }
-        .neon-green { color: #00ff9d; text-shadow: 0 0 20px #00ff9d; }
-        .wave-bar { animation: wave 1.2s infinite alternate; }
-        @keyframes wave { from { height: 20%; } to { height: 100%; } }
-    </style>
+<title>MoraAI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { background:#0f1115; color:white; }
+.glass { background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); }
+.wave div {
+  width:3px; background:#3b82f6; height:20px;
+  animation:wave 1s infinite;
+}
+@keyframes wave {
+  0%{height:10%}50%{height:100%}100%{height:10%}
+}
+</style>
 </head>
-<body class="min-h-screen flex">
-    <!-- SIDEBAR (ElevenLabs style) -->
-    <div class="w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col">
-        <div class="p-6 flex items-center gap-2">
-            <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-xl flex items-center justify-center text-black font-bold text-xl">11</div>
-            <span class="text-2xl font-bold tracking-tighter">Voice AI</span>
-        </div>
-        <nav class="flex-1 px-3 py-4 space-y-1">
-            <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-zinc-900 text-emerald-400 font-medium">
-                <i class="fa-solid fa-comment-dots"></i> Text to Speech
-            </a>
-            <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-2xl hover:bg-zinc-900">
-                <i class="fa-solid fa-headphones"></i> Voices
-            </a>
-            <a href="#" onclick="cloneModal()" class="flex items-center gap-3 px-5 py-3.5 rounded-2xl hover:bg-zinc-900">
-                <i class="fa-solid fa-microphone"></i> Voice Lab (Clone)
-            </a>
-            <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-2xl hover:bg-zinc-900">
-                <i class="fa-solid fa-folder"></i> Projects
-            </a>
-        </nav>
-        <div class="p-6 border-t border-zinc-800">
-            <div class="flex items-center gap-3">
-                <img src="https://i.pravatar.cc/128?img=68" class="w-9 h-9 rounded-full">
-                <div>
-                    <div class="font-medium">John Doe</div>
-                    <div class="text-xs text-zinc-400">john@example.com</div>
-                </div>
-            </div>
-        </div>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="flex items-center justify-center h-screen">
+  <div class="glass p-6 rounded-xl w-80">
+    <input id="email" placeholder="Email" class="w-full p-2 mb-2 bg-black">
+    <input id="password" placeholder="Password" class="w-full p-2 mb-2 bg-black">
+    <button onclick="login()" class="w-full bg-blue-600 p-2">Login</button>
+    <button onclick="signup()" class="w-full mt-2 border p-2">Signup</button>
+    <p id="status"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden flex h-screen">
+
+  <!-- SIDEBAR -->
+  <div class="w-64 glass p-4">
+    <h2>MoraAI</h2>
+    <button onclick="showPayment()" class="mt-4 text-blue-400">Upgrade</button>
+    <button onclick="logout()" class="mt-2 text-red-400">Logout</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="flex-1 p-6">
+
+    <div>Credits: <span id="credits">0</span></div>
+
+    <textarea id="text" class="w-full h-40 bg-black mt-4"></textarea>
+
+    <button onclick="generate()" class="bg-blue-600 mt-2 p-2">
+      Generate
+    </button>
+
+    <!-- PLAYER -->
+    <div class="mt-4 flex items-center gap-4">
+      <button onclick="togglePlay()">▶</button>
+      <div class="flex gap-1">
+        <div class="wave"><div></div><div></div><div></div></div>
+      </div>
     </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="flex-1 flex flex-col">
-        <!-- TOP BAR -->
-        <div class="h-16 border-b border-zinc-800 bg-zinc-950 flex items-center px-8 justify-between">
-            <div class="flex items-center gap-3">
-                <span class="font-semibold text-lg">Text to Speech</span>
-            </div>
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2 text-sm">
-                    <span class="text-zinc-400">Credits:</span>
-                    <span id="credit-display" class="font-mono text-emerald-400">138 / 15,000</span>
-                </div>
-                <button onclick="upgrade()" class="bg-emerald-500 hover:bg-emerald-600 px-6 py-2 rounded-2xl font-medium text-sm">Upgrade</button>
-            </div>
-        </div>
-
-        <!-- BODY -->
-        <div class="flex-1 p-8 flex gap-8 overflow-auto">
-            <!-- TEXT INPUT -->
-            <div class="flex-1 bg-zinc-900 rounded-3xl p-8">
-                <textarea id="text" class="w-full h-80 bg-transparent text-lg resize-none focus:outline-none placeholder-zinc-500" 
-                          placeholder="Enter your text here... In the ancient land of Eldoria..."></textarea>
-                
-                <div class="mt-8 flex items-center justify-between">
-                    <div class="flex gap-6">
-                        <!-- Voice -->
-                        <div>
-                            <div class="text-xs text-zinc-400 mb-1">Voice</div>
-                            <select id="voice" class="bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-3 text-sm w-52">
-                                <option>Default Voice</option>
-                            </select>
-                        </div>
-                        <!-- Language -->
-                        <div>
-                            <div class="text-xs text-zinc-400 mb-1">Language</div>
-                            <select id="lang" class="bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-3 text-sm w-52">
-                                <option>English</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- ELEVENLABS STYLE SLIDERS -->
-                    <div class="flex gap-8">
-                        <div class="w-48">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span>Stability</span>
-                                <span id="stab-val" class="text-emerald-400">75%</span>
-                            </div>
-                            <input type="range" min="0" max="100" value="75" id="stability" class="w-full accent-emerald-400">
-                        </div>
-                        <div class="w-48">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span>Clarity</span>
-                                <span id="clar-val" class="text-emerald-400">85%</span>
-                            </div>
-                            <input type="range" min="0" max="100" value="85" id="clarity" class="w-full accent-emerald-400">
-                        </div>
-                    </div>
-
-                    <button onclick="generate()" id="gen-btn"
-                            class="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-12 py-4 rounded-3xl text-lg flex items-center gap-2 shadow-lg shadow-emerald-500/30">
-                        <i class="fa-solid fa-bolt"></i> Generate
-                    </button>
-                </div>
-            </div>
-
-            <!-- AUDIO PLAYER (appears after generation) -->
-            <div id="player" class="w-96 bg-zinc-900 rounded-3xl p-6 hidden flex flex-col">
-                <div class="flex-1 flex items-center justify-center">
-                    <button onclick="togglePlay()" class="w-16 h-16 bg-emerald-500 rounded-2xl text-black flex items-center justify-center text-3xl">
-                        <i id="play-icon" class="fa-solid fa-play"></i>
-                    </button>
-                </div>
-                <div id="wave" class="flex gap-1 h-12 items-end justify-center my-4"></div>
-                <div class="text-xs font-mono text-center text-zinc-400" id="time">00:00 / 00:15</div>
-                <button onclick="download()" class="mt-4 text-emerald-400 hover:text-white flex items-center justify-center gap-2 text-sm">
-                    <i class="fa-solid fa-download"></i> Download
-                </button>
-            </div>
-        </div>
+    <div class="mt-2 h-1 bg-gray-700">
+      <div id="progress" class="h-1 bg-blue-500 w-0"></div>
     </div>
 
-    <!-- CLONE MODAL (ElevenLabs style) -->
-    <div id="clone-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-zinc-900 rounded-3xl w-full max-w-md p-8">
-            <h2 class="text-2xl font-bold mb-2">Instant Voice Clone</h2>
-            <p class="text-zinc-400 mb-6">Upload 30 seconds of clear audio</p>
-            <div onclick="document.getElementById('voicefile').click()" 
-                 class="border-2 border-dashed border-zinc-700 rounded-3xl h-64 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400">
-                <i class="fa-solid fa-cloud-arrow-up text-6xl text-zinc-600 mb-4"></i>
-                <p class="text-sm">Click or drop audio file</p>
-                <input type="file" id="voicefile" accept="audio/*" class="hidden" onchange="cloneVoice()">
-            </div>
-            <div class="flex gap-4 mt-8">
-                <button onclick="closeClone()" class="flex-1 py-4 border border-zinc-700 rounded-2xl">Cancel</button>
-                <button onclick="closeClone()" class="flex-1 py-4 bg-emerald-500 text-black font-semibold rounded-2xl">Clone Now</button>
-            </div>
-        </div>
-    </div>
+    <audio id="audio" class="hidden"></audio>
+
+  </div>
+</div>
+
+<!-- PAYMENT -->
+<div id="paymentPage" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center">
+  <div class="bg-white text-black p-6 rounded-xl text-center">
+
+    <h2>Pay ₹99</h2>
+
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=yourupi@upi">
+
+    <p>UPI: yourupi@upi</p>
+
+    <button onclick="verifyPayment()" class="bg-blue-600 text-white p-2 w-full mt-2">
+      I Paid
+    </button>
+
+    <button onclick="hidePayment()">Cancel</button>
+  </div>
+</div>
 
 <script>
-const BACKEND = "https://backend.goswamimohit787916.workers.dev";
-let audio = null;
 
-async function loadCredits() {
-    const res = await fetch(`${BACKEND}/credits?email=john@example.com`);
-    const data = await res.json();
-    document.getElementById('credit-display').textContent = `${data.used} / 15,000`;
+const API = "https://backend.goswamimohit787916.workers.dev";
+let uid = localStorage.getItem("uid");
+let audio = new Audio();
+
+// INIT
+if(uid){ showApp(); loadUser(); }
+
+function showApp(){
+  loginPage.style.display="none";
+  app.style.display="flex";
 }
 
-async function generate() {
-    const btn = document.getElementById('gen-btn');
-    btn.innerHTML = 'Generating...';
-    btn.disabled = true;
-
-    const res = await fetch(`${BACKEND}/generate`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            email: "john@example.com",
-            text: document.getElementById('text').value
-        })
-    });
-    const data = await res.json();
-
-    document.getElementById('player').classList.remove('hidden');
-    audio = new Audio(data.audioUrl);
-    createWaveform();
-    await loadCredits();
-    
-    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Generate';
-    btn.disabled = false;
+// AUTH
+async function signup(){
+  let r = await fetch(API+"/signup",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({email:email.value,password:password.value})});
+  let d = await r.json();
+  status.innerText=d.ok?"Created":"Error";
 }
 
-function createWaveform() {
-    const container = document.getElementById('wave');
-    container.innerHTML = '';
-    for (let i = 0; i < 40; i++) {
-        const bar = document.createElement('div');
-        bar.className = 'wave-bar w-1 bg-emerald-400 rounded-full';
-        bar.style.height = Math.random() * 80 + 20 + '%';
-        container.appendChild(bar);
-    }
+async function login(){
+  let r = await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({email:email.value,password:password.value})});
+  let d = await r.json();
+  if(d.ok){ uid=d.uid; localStorage.setItem("uid",uid); showApp(); loadUser(); }
 }
 
-function togglePlay() { /* same as before */ }
-async function cloneVoice() { /* same as before, saves to your D1 */ }
-function cloneModal() { document.getElementById('clone-modal').classList.remove('hidden'); }
-function closeClone() { document.getElementById('clone-modal').classList.add('hidden'); }
-function upgrade() { alert('Upgrade coming soon (payment later)'); }
-function download() { if(audio) window.open(audio.src); }
+// USER
+async function loadUser(){
+  let r = await fetch(API+"/user?uid="+uid);
+  let d = await r.json();
+  credits.innerText=d.user.credits;
+}
 
-// Live sliders
-document.getElementById('stability').addEventListener('input', (e) => document.getElementById('stab-val').textContent = e.target.value + '%');
-document.getElementById('clarity').addEventListener('input', (e) => document.getElementById('clar-val').textContent = e.target.value + '%');
+// GENERATE
+async function generate(){
+  let r = await fetch(API+"/generate",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({uid,text:text.value})});
+  let d = await r.json();
 
-window.onload = () => {
-    loadCredits();
-    document.getElementById('text').value = "In the ancient land of Eldoria, where skies shimmered...";
+  if(d.ok){
+    audio.src=d.audio;
+    audio.play();
+    credits.innerText=d.remaining;
+  } else alert(d.error);
+}
+
+// PLAYER
+function togglePlay(){
+  if(audio.paused) audio.play(); else audio.pause();
+}
+
+// PROGRESS
+audio.ontimeupdate=()=>{
+  let p=(audio.currentTime/audio.duration)*100;
+  progress.style.width=p+"%";
 };
+
+// PAYMENT
+function showPayment(){ paymentPage.style.display="flex"; }
+function hidePayment(){ paymentPage.style.display="none"; }
+
+async function verifyPayment(){
+  await fetch(API+"/verify-payment",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({uid})});
+  alert("Credits added");
+  hidePayment();
+  loadUser();
+}
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("uid");
+  location.reload();
+}
+
 </script>
+
 </body>
 </html>
