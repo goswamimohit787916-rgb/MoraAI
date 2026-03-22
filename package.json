@@ -1,8 +1,0 @@
-{
-  "name": "voice-clone-ui",
-  "version": "1.0.0",
-  "description": "Static HTML site for Cloudflare Pages",
-  "scripts": {
-    "build": "mkdir -p dist && cp index.html dist/index.html"
-  }
-}
