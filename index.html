@@ -3,164 +3,95 @@
 <head>
 <title>MoraAI</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-body { background:#0f1115; color:white; }
-.glass { background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); }
-.wave div {
-  width:3px; background:#3b82f6; height:20px;
-  animation:wave 1s infinite;
-}
-@keyframes wave {
-  0%{height:10%}50%{height:100%}100%{height:10%}
-}
-</style>
 </head>
 
-<body>
+<body class="bg-black text-white">
 
 <!-- LOGIN -->
 <div id="loginPage" class="flex items-center justify-center h-screen">
-  <div class="glass p-6 rounded-xl w-80">
-    <input id="email" placeholder="Email" class="w-full p-2 mb-2 bg-black">
-    <input id="password" placeholder="Password" class="w-full p-2 mb-2 bg-black">
-    <button onclick="login()" class="w-full bg-blue-600 p-2">Login</button>
-    <button onclick="signup()" class="w-full mt-2 border p-2">Signup</button>
+  <div class="bg-white/10 p-6 rounded">
+    <input id="email" placeholder="Email" class="block mb-2 text-black">
+    <input id="password" placeholder="Password" class="block mb-2 text-black">
+    <button onclick="login()" class="bg-blue-600 px-4 py-2">Login</button>
+    <button onclick="signup()" class="bg-gray-600 px-4 py-2">Signup</button>
     <p id="status"></p>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app" class="hidden flex h-screen">
+<div id="app" class="hidden p-6">
+  Credits: <span id="credits">0</span><br><br>
 
-  <!-- SIDEBAR -->
-  <div class="w-64 glass p-4">
-    <h2>MoraAI</h2>
-    <button onclick="showPayment()" class="mt-4 text-blue-400">Upgrade</button>
-    <button onclick="logout()" class="mt-2 text-red-400">Logout</button>
-  </div>
+  <textarea id="text" class="w-full h-32 text-black"></textarea><br>
 
-  <!-- MAIN -->
-  <div class="flex-1 p-6">
+  <button onclick="generate()" class="bg-blue-600 px-4 py-2">Generate</button>
+  <button onclick="showPayment()" class="bg-green-600 px-4 py-2">Upgrade</button>
 
-    <div>Credits: <span id="credits">0</span></div>
-
-    <textarea id="text" class="w-full h-40 bg-black mt-4"></textarea>
-
-    <button onclick="generate()" class="bg-blue-600 mt-2 p-2">
-      Generate
-    </button>
-
-    <!-- PLAYER -->
-    <div class="mt-4 flex items-center gap-4">
-      <button onclick="togglePlay()">▶</button>
-      <div class="flex gap-1">
-        <div class="wave"><div></div><div></div><div></div></div>
-      </div>
-    </div>
-
-    <div class="mt-2 h-1 bg-gray-700">
-      <div id="progress" class="h-1 bg-blue-500 w-0"></div>
-    </div>
-
-    <audio id="audio" class="hidden"></audio>
-
-  </div>
+  <audio id="audio" controls></audio>
 </div>
 
 <!-- PAYMENT -->
-<div id="paymentPage" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center">
-  <div class="bg-white text-black p-6 rounded-xl text-center">
-
-    <h2>Pay ₹99</h2>
-
+<div id="pay" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center">
+  <div class="bg-white text-black p-6">
     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=yourupi@upi">
-
-    <p>UPI: yourupi@upi</p>
-
-    <button onclick="verifyPayment()" class="bg-blue-600 text-white p-2 w-full mt-2">
-      I Paid
-    </button>
-
-    <button onclick="hidePayment()">Cancel</button>
+    <button onclick="verify()">I Paid</button>
   </div>
 </div>
 
 <script>
 
-const API = "https://backend.goswamimohit787916.workers.dev";
-let uid = localStorage.getItem("uid");
-let audio = new Audio();
+const API = "https://backend.goswamimohit787916.workers.dev/";
 
-// INIT
+let uid = localStorage.getItem("uid");
+
 if(uid){ showApp(); loadUser(); }
 
 function showApp(){
   loginPage.style.display="none";
-  app.style.display="flex";
+  app.style.display="block";
 }
 
-// AUTH
 async function signup(){
   let r = await fetch(API+"/signup",{method:"POST",headers:{"Content-Type":"application/json"},
   body:JSON.stringify({email:email.value,password:password.value})});
-  let d = await r.json();
-  status.innerText=d.ok?"Created":"Error";
+  status.innerText="Created";
 }
 
 async function login(){
   let r = await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},
   body:JSON.stringify({email:email.value,password:password.value})});
   let d = await r.json();
-  if(d.ok){ uid=d.uid; localStorage.setItem("uid",uid); showApp(); loadUser(); }
+  if(d.ok){
+    uid=d.uid;
+    localStorage.setItem("uid",uid);
+    showApp();
+    loadUser();
+  }
 }
 
-// USER
 async function loadUser(){
   let r = await fetch(API+"/user?uid="+uid);
   let d = await r.json();
   credits.innerText=d.user.credits;
 }
 
-// GENERATE
 async function generate(){
   let r = await fetch(API+"/generate",{method:"POST",headers:{"Content-Type":"application/json"},
   body:JSON.stringify({uid,text:text.value})});
   let d = await r.json();
-
   if(d.ok){
     audio.src=d.audio;
-    audio.play();
     credits.innerText=d.remaining;
-  } else alert(d.error);
+  }
 }
 
-// PLAYER
-function togglePlay(){
-  if(audio.paused) audio.play(); else audio.pause();
-}
+function showPayment(){ pay.style.display="flex"; }
 
-// PROGRESS
-audio.ontimeupdate=()=>{
-  let p=(audio.currentTime/audio.duration)*100;
-  progress.style.width=p+"%";
-};
-
-// PAYMENT
-function showPayment(){ paymentPage.style.display="flex"; }
-function hidePayment(){ paymentPage.style.display="none"; }
-
-async function verifyPayment(){
+async function verify(){
   await fetch(API+"/verify-payment",{method:"POST",headers:{"Content-Type":"application/json"},
   body:JSON.stringify({uid})});
-  alert("Credits added");
-  hidePayment();
   loadUser();
-}
-
-// LOGOUT
-function logout(){
-  localStorage.removeItem("uid");
-  location.reload();
+  pay.style.display="none";
 }
 
 </script>
