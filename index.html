@@ -19,7 +19,7 @@
             <span class="text-2xl font-semibold">Generate</span>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1">
-            <a href="#" class="active flex items-center gap-3 px-5 py-3.5 rounded-3xl bg-sky-50 text-blue-600 font-medium"><i class="fa-solid fa-microphone"></i> Generate</a>
+            <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-3xl bg-sky-50 text-blue-600 font-medium"><i class="fa-solid fa-microphone"></i> Generate</a>
             <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-3xl text-zinc-600"><i class="fa-solid fa-headphones"></i> Voices</a>
             <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-3xl text-zinc-600"><i class="fa-solid fa-folder-tree"></i> Projects</a>
             <a href="#" class="flex items-center gap-3 px-5 py-3.5 rounded-3xl text-zinc-600"><i class="fa-solid fa-gear"></i> Settings</a>
@@ -35,14 +35,18 @@
         </div>
     </div>
 
-    <!-- MAIN -->
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
         <div class="h-14 border-b bg-white px-8 flex items-center justify-between">
-            <div>Credit Limit: <span id="credits" class="font-mono text-blue-600">138 / 15,000</span></div>
-            <button onclick="upgrade()" class="bg-blue-600 text-white px-6 h-9 rounded-3xl font-medium">Upgrade</button>
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-microphone-lines text-blue-600"></i>
+                <span class="font-medium">Credit Limit:</span>
+                <span id="credit-display" class="font-mono text-blue-600">138 / 15,000</span>
+            </div>
+            <button onclick="upgrade()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 h-9 rounded-3xl text-sm font-semibold">Upgrade</button>
         </div>
 
-        <div class="flex-1 p-8 bg-zinc-50">
+        <div class="flex-1 p-8 bg-zinc-50 overflow-auto">
             <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow border">
                 <!-- TABS -->
                 <div class="flex border-b">
@@ -51,56 +55,57 @@
                 </div>
 
                 <div class="p-8">
-                    <textarea id="text" class="w-full h-64 border rounded-2xl p-6 focus:outline-none" placeholder="Enter your text here or paste your script..."></textarea>
-                    <div class="text-right text-xs mt-2"><span id="char">0</span>/2,500</div>
+                    <textarea id="text" class="w-full h-64 border border-zinc-200 rounded-2xl p-6 focus:outline-none focus:border-blue-400" placeholder="Enter your text here or paste your script..."></textarea>
+                    <div class="text-right text-xs text-zinc-400 mt-2"><span id="chars">0</span> / 2,500</div>
                 </div>
 
                 <div class="px-8 pb-8 flex gap-4">
-                    <button onclick="uploadTXT()" class="flex-1 border h-12 rounded-2xl flex items-center justify-center gap-2"><i class="fa-solid fa-upload"></i> Upload TXT</button>
-                    <button onclick="cloneModal()" class="flex-1 bg-blue-600 text-white h-12 rounded-2xl flex items-center justify-center gap-2"><i class="fa-solid fa-microphone"></i> Clone Voice</button>
+                    <button onclick="uploadTXT()" class="flex-1 border h-12 rounded-2xl flex items-center justify-center gap-2 font-medium"><i class="fa-solid fa-upload"></i> Upload TXT</button>
+                    <button onclick="showCloneModal()" class="flex-1 bg-blue-600 text-white h-12 rounded-2xl flex items-center justify-center gap-2 font-medium"><i class="fa-solid fa-microphone"></i> Clone Voice</button>
                 </div>
 
                 <div class="border-t px-8 py-6 grid grid-cols-4 gap-4 bg-zinc-50">
-                    <select class="h-11 border rounded-2xl px-4"><option>Default Voice</option></select>
-                    <select class="h-11 border rounded-2xl px-4"><option>English</option></select>
-                    <select class="h-11 border rounded-2xl px-4"><option>Standard</option></select>
-                    <button onclick="generateAudio()" class="bg-blue-600 text-white rounded-2xl font-semibold">Generate</button>
+                    <select id="voice" class="h-11 border rounded-2xl px-5"><option>Default Voice</option></select>
+                    <select id="lang" class="h-11 border rounded-2xl px-5"><option>English</option></select>
+                    <select id="style" class="h-11 border rounded-2xl px-5"><option>Standard</option></select>
+                    <button onclick="generate()" class="bg-blue-600 text-white rounded-2xl font-semibold">Generate</button>
                 </div>
 
-                <!-- PLAYER -->
+                <!-- AUDIO PLAYER -->
                 <div id="player" class="hidden border-t p-8">
                     <div class="flex items-center gap-6">
-                        <button onclick="togglePlay()" class="w-12 h-12 bg-blue-600 rounded-2xl text-white"><i id="play-icon" class="fa-solid fa-play"></i></button>
+                        <button onclick="togglePlay()" class="w-12 h-12 bg-blue-600 rounded-2xl text-white flex items-center justify-center"><i id="play-icon" class="fa-solid fa-play"></i></button>
                         <div id="wave" class="flex-1 flex gap-1 h-12 items-end"></div>
-                        <div id="time" class="font-mono text-xs">00:00 / 00:15</div>
-                        <button onclick="download()" class="text-zinc-400"><i class="fa-solid fa-download"></i></button>
+                        <div id="time" class="font-mono text-xs w-20">00:00 / 00:15</div>
+                        <button onclick="downloadAudio()" class="text-zinc-400"><i class="fa-solid fa-download"></i></button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Clone Modal -->
-    <div id="clone-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center">
+    <!-- CLONE MODAL -->
+    <div id="clone-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full">
-            <h3 class="text-xl font-semibold mb-6">Clone Voice</h3>
-            <div onclick="document.getElementById('file').click()" class="border-2 border-dashed h-48 rounded-2xl flex flex-col items-center justify-center cursor-pointer">
+            <h3 class="font-semibold text-xl mb-6">Clone Voice</h3>
+            <div onclick="document.getElementById('voicefile').click()" class="border-2 border-dashed border-zinc-300 rounded-2xl h-48 flex flex-col items-center justify-center cursor-pointer">
                 <i class="fa-solid fa-cloud-arrow-up text-5xl text-zinc-300"></i>
-                <p class="text-zinc-500 mt-2">Upload audio (max 30s)</p>
-                <input id="file" type="file" accept="audio/*" class="hidden" onchange="cloneVoice()">
+                <p class="text-zinc-500 mt-2">Upload audio file (max 30s)</p>
+                <input id="voicefile" type="file" accept="audio/*" class="hidden" onchange="cloneVoice()">
             </div>
             <div class="mt-8 flex gap-4">
-                <button onclick="closeModal()" class="flex-1 py-4 border rounded-2xl">Cancel</button>
-                <button onclick="closeModal()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl">Clone</button>
+                <button onclick="hideCloneModal()" class="flex-1 py-4 border rounded-2xl">Cancel</button>
+                <button onclick="hideCloneModal()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl">Clone Voice</button>
             </div>
         </div>
     </div>
 
 <script>
 const BACKEND = "https://backend.goswamimohit787916.workers.dev";
+let audio = null;
 
-async function generateAudio() {
-    const btn = document.querySelector('button[onclick="generateAudio()"]');
+async function generate() {
+    const btn = document.querySelector('button[onclick="generate()"]');
     btn.innerHTML = "Generating...";
     const res = await fetch(`${BACKEND}/generate`, {
         method: "POST",
@@ -109,40 +114,63 @@ async function generateAudio() {
     });
     const data = await res.json();
     document.getElementById("player").classList.remove("hidden");
-    window.currentAudio = new Audio(data.audioUrl);
-    createWave();
+    audio = new Audio(data.audioUrl);
+    createWaveform();
     btn.innerHTML = "Generate";
 }
 
-function createWave() {
-    const w = document.getElementById("wave");
-    w.innerHTML = "";
-    for(let i=0; i<48; i++) {
+function createWaveform() {
+    const container = document.getElementById("wave");
+    container.innerHTML = "";
+    for (let i = 0; i < 48; i++) {
         const bar = document.createElement("div");
         bar.className = "w-1 bg-blue-600 rounded-full";
-        bar.style.height = Math.random()*80 + 20 + "%";
-        w.appendChild(bar);
+        bar.style.height = `${Math.random() * 80 + 20}%`;
+        container.appendChild(bar);
     }
 }
 
 function togglePlay() {
-    const audio = window.currentAudio;
-    const icon = document.getElementById("play-icon");
-    if (audio.paused) { audio.play(); icon.classList.replace("fa-play","fa-pause"); }
-    else { audio.pause(); icon.classList.replace("fa-pause","fa-play"); }
+    if (!audio) return;
+    if (audio.paused) {
+        audio.play();
+        document.getElementById("play-icon").classList.replace("fa-play", "fa-pause");
+    } else {
+        audio.pause();
+        document.getElementById("play-icon").classList.replace("fa-pause", "fa-play");
+    }
 }
 
-function cloneVoice() { alert("Voice cloned & .pth saved in your D1 (bound to email)"); closeModal(); }
-function uploadTXT() { /* same as before */ alert("TXT uploaded"); }
-function cloneModal() { document.getElementById("clone-modal").classList.remove("hidden"); }
-function closeModal() { document.getElementById("clone-modal").classList.add("hidden"); }
-function upgrade() { alert("Upgrade coming later"); }
-function download() { if(window.currentAudio) window.open(window.currentAudio.src); }
+function showCloneModal() { document.getElementById("clone-modal").classList.remove("hidden"); }
+function hideCloneModal() { document.getElementById("clone-modal").classList.add("hidden"); }
+
+function cloneVoice() {
+    alert("✅ Voice cloned! .pth file saved in your D1 and bound to john@example.com");
+    hideCloneModal();
+}
+
+function uploadTXT() {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = ".txt";
+    input.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = ev => document.getElementById("text").value = ev.target.result;
+        reader.readAsText(e.target.files[0]);
+    };
+    input.click();
+}
+
+function upgrade() { alert("Upgrade plan coming soon"); }
+function downloadAudio() { if(audio) window.open(audio.src); }
 
 // Live char count
-document.getElementById("text").oninput = () => document.getElementById("char").textContent = document.getElementById("text").value.length;
+document.getElementById("text").oninput = () => {
+    document.getElementById("chars").textContent = document.getElementById("text").value.length;
+};
 
-window.onload = () => document.getElementById("text").value = "Hello, this is a demo voice using your Cloudflare + D1 backend.";
+window.onload = () => {
+    document.getElementById("text").value = "Hello, this is a demo using your Cloudflare backend + D1.";
+};
 </script>
 </body>
 </html>
