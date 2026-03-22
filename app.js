@@ -2,19 +2,20 @@ const API = "https://backend.goswamimohit787916.workers.dev/";
 
 let uid = localStorage.getItem("uid");
 
-if(uid){
+if (uid) {
   showApp();
   loadUser();
 }
 
+// UI
 function showApp(){
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").classList.remove("hidden");
+  loginPage.style.display = "none";
+  app.style.display = "flex";
 }
 
-// SIGNUP
+// AUTH
 async function signup(){
-  await fetch(API+"/signup",{
+  let r = await fetch(API+"/signup",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -22,10 +23,11 @@ async function signup(){
       password:password.value
     })
   });
-  alert("Account created");
+
+  let d = await r.json();
+  alert(d.ok ? "Account created" : d.error);
 }
 
-// LOGIN
 async function login(){
   let r = await fetch(API+"/login",{
     method:"POST",
@@ -43,7 +45,7 @@ async function login(){
     localStorage.setItem("uid",uid);
     showApp();
     loadUser();
-  } else alert("Invalid login");
+  } else alert(d.error);
 }
 
 // USER
@@ -56,7 +58,12 @@ async function loadUser(){
 // GENERATE
 async function generate(){
 
-  if(!text.value){
+  if(!uid){
+    alert("Login required");
+    return;
+  }
+
+  if(!text.value.trim()){
     alert("Enter text");
     return;
   }
@@ -80,7 +87,7 @@ async function generate(){
 
 // PAYMENT
 function pay(){
-  alert("Pay to UPI → yourupi@upi");
+  alert("Pay to UPI: yourupi@upi");
   verify();
 }
 
