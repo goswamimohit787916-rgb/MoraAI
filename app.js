@@ -1,41 +1,27 @@
 const API = "https://backend.goswamimohit787916.workers.dev/";
 
 let uid = localStorage.getItem("uid");
+let audio = document.getElementById("audio");
+let isPlaying = false;
 
-if (uid) {
+// INIT
+if(uid){
   showApp();
   loadUser();
+  loadVoices();
 }
 
 // UI
 function showApp(){
-  loginPage.style.display = "none";
-  app.style.display = "flex";
+  loginPage.style.display="none";
+  app.style.display="flex";
 }
 
 // AUTH
-async function signup(){
-  let r = await fetch(API+"/signup",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value
-    })
-  });
-
-  let d = await r.json();
-  alert(d.ok ? "Account created" : d.error);
-}
-
 async function login(){
-  let r = await fetch(API+"/login",{
-    method:"POST",
+  let r = await fetch(API+"/login",{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value
-    })
+    body:JSON.stringify({email:email.value,password:password.value})
   });
 
   let d = await r.json();
@@ -48,6 +34,16 @@ async function login(){
   } else alert(d.error);
 }
 
+async function signup(){
+  let r = await fetch(API+"/signup",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email:email.value,password:password.value})
+  });
+
+  let d = await r.json();
+  alert(d.ok ? "Created" : d.error);
+}
+
 // USER
 async function loadUser(){
   let r = await fetch(API+"/user?uid="+uid);
@@ -58,45 +54,79 @@ async function loadUser(){
 // GENERATE
 async function generate(){
 
-  if(!uid){
-    alert("Login required");
-    return;
-  }
+  if(!uid) return alert("Login required");
 
-  if(!text.value.trim()){
-    alert("Enter text");
-    return;
-  }
-
-  let r = await fetch(API+"/generate",{
-    method:"POST",
+  let r = await fetch(API+"/generate",{method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      uid:uid,
-      text:text.value
-    })
+    body:JSON.stringify({uid,text:text.value})
   });
 
   let d = await r.json();
 
   if(d.ok){
     audio.src = d.audio;
+    audio.play();
+    createWave();
     credits.innerText = d.remaining;
-  } else alert(d.error);
+  }
 }
+
+// WAVEFORM
+function createWave(){
+  let wave = document.getElementById("wave");
+  wave.innerHTML="";
+  for(let i=0;i<40;i++){
+    let bar = document.createElement("div");
+    bar.style.width="4px";
+    bar.style.background="#6366f1";
+    bar.style.height=(Math.random()*50+10)+"px";
+    wave.appendChild(bar);
+  }
+}
+
+// PLAY
+function togglePlay(){
+  if(isPlaying){
+    audio.pause();
+  } else {
+    audio.play();
+  }
+  isPlaying = !isPlaying;
+}
+
+// VOICES UI
+function loadVoices(){
+  let container = document.getElementById("voices");
+  container.innerHTML="";
+
+  for(let i=1;i<=3;i++){
+    let card = document.createElement("div");
+    card.className="bg-[#111827] p-4 rounded cursor-pointer";
+    card.innerText="Voice "+i;
+    container.appendChild(card);
+  }
+}
+
+// CLONE
+function openClone(){
+  cloneModal.style.display="flex";
+}
+
+function closeClone(){
+  cloneModal.style.display="none";
+}
+
+// DRAG DROP
+let drop = document.getElementById("drop");
+
+drop.ondragover = e => e.preventDefault();
+
+drop.ondrop = e => {
+  e.preventDefault();
+  alert("Audio selected");
+};
 
 // PAYMENT
 function pay(){
-  alert("Pay to UPI: yourupi@upi");
-  verify();
-}
-
-async function verify(){
-  await fetch(API+"/verify-payment",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({uid})
-  });
-
-  loadUser();
+  alert("UPI → yourupi@upi");
 }
